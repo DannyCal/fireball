@@ -16,6 +16,7 @@ const SyncedSession = ({ gameRoomId }) => {
     const [gameState, setGameState] = useState({});
     const [playerCards, setPlayerCards] = useState([]);
     const [turn, setTurn] = useState('');
+    const [cardOffers, setCardOffers] = useState([]);
 
 
     useEffect(() => {
@@ -80,7 +81,12 @@ const SyncedSession = ({ gameRoomId }) => {
         {started && <div>
             Your cards:
             <br />
-            {playerCards.length && playerCards.map(card => <Card value={card} />)}
+            {playerCards.length && playerCards.map((card, i) =>
+                <Card value={card} onClick={() => {
+                    alert(i);
+                    if (cardOffers.includes(i)) { setCardOffers(prevOffers => prevOffers.splice(prevOffers.indexOf(i), 1)); }
+                }} selectionNumber={cardOffers.indexOf(i)} />
+            )}
         </div>}
 
         {started && <div>

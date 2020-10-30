@@ -9,6 +9,12 @@ let db = {}
 
 io.on('connection', socket => {
 
+    const updateGameState = ({ gameRoomId, msg }) => {
+        io.to(gameRoomId).emit('update-game-state', ({
+            msg, newGameState: db[gameRoomId].gameState.visible
+        }))
+    }
+
     socket.on('join-room', ({ gameRoomId, playerId }) => {
         socket.join(gameRoomId);
         if (db[gameRoomId]) {
@@ -52,7 +58,7 @@ io.on('connection', socket => {
     });
 
     socket.on('play-turn', ({ gameRoomId, playerId, cardIndex }) => {
-        if (db[gameRoomId].gameState) {
+        if (db[gameRoomId] && db[gameRoomId].gameState) {
             const currentPlayerIndex = db[gameRoomId].gameState.visible.playingPlayers.indexOf(playerId);
             const nextPlayerIndex = (currentPlayerIndex + 1) < db[gameRoomId].gameState.visible.playingPlayers.length ?
                 currentPlayerIndex + 1 : 0;
@@ -60,9 +66,7 @@ io.on('connection', socket => {
             const sentCard = db[gameRoomId].gameState.deck[playerId].splice(cardIndex, 1);
             db[gameRoomId].gameState.deck[nextPlayer].push(sentCard);
             db[gameRoomId].gameState.visible.turn = nextPlayer;
-            io.to(gameRoomId).emit('update-game-state', ({
-                msg: 'Pop', newGameState: db[gameRoomId].gameState.visible
-            }))
+            updateGameState({ gameRoomId })
         }
     })
 

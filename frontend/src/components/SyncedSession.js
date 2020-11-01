@@ -109,7 +109,7 @@ const SyncedSession = ({ gameRoomId }) => {
                 {players.length && players.map(p => <li key={p}>{p}{playingPlayers && playingPlayers.includes(p) && ' [Playing]'}{p === adminId && <b>{' [Admin]'}</b>}</li>)}
             </ol>
             <br />
-            {adminId === playerId && <button onClick={startGame}>{started ? 'Restart Game' : 'Start Game!'}</button>}
+            {adminId === playerId && <button onClick={startGame} disabled={!(players && players.length >= 3)}>{started ? 'Restart Game' : 'Start Game!'}</button>}
 
         </div>) : 'Loading...')}
         {!joined && <div>

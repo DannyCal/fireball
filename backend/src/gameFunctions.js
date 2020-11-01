@@ -11,7 +11,15 @@ const shuffle = array => {
     return array;
 }
 
-const splitDeckToPlayers = ({ players, deck, turn }) => {
+const checkTriple = deck => Object.values(deck).some(
+    cards => {
+        counter = {};
+        cards.forEach(x => counter[x] = (counter[x] || 0) + 1);
+        return [3, 4].some(n => Object.values(counter).includes(n));
+    });
+
+
+const splitDeckToPlayers = ({ players, deck, sender }) => {
     let splitDeck = Object.fromEntries(deck.reduce((resultDeck, card, index) => {
         const chunkIndex = Math.floor(index / 4);
         if (!resultDeck[chunkIndex])
@@ -23,31 +31,53 @@ const splitDeckToPlayers = ({ players, deck, turn }) => {
     const unlucky = players[Math.floor(Math.random() * players.length)];
     popped = splitDeck[unlucky].pop();
     splitDeck[unlucky].push(0);
-    splitDeck[turn].push(popped);
+    splitDeck[sender].push(popped);
     return splitDeck;
 }
 
 
 const newGameState = (gameRoomObj) => {
     console.log(gameRoomObj);
-    const turn = gameRoomObj.players[Math.floor(Math.random() * gameRoomObj.players.length)];
+    const sender = gameRoomObj.players[Math.floor(Math.random() * gameRoomObj.players.length)];
+    const receiver = gameRoomObj.players[(gameRoomObj.players.indexOf(sender) + 1) % gameRoomObj.players.length];
 
-    const unshuffledDeck = shuffle(
+    const shuffledDeck = shuffle(
         Object.keys([...Array(gameRoomObj.players.length)])
             .map(i => [Number(i) + 1, Number(i) + 1, Number(i) + 1, Number(i) + 1])
             .reduce((total, current) => total.concat(current), []));
-    const deck = splitDeckToPlayers({ players: gameRoomObj.players, deck: unshuffledDeck, turn });
+    let deck = splitDeckToPlayers({ players: gameRoomObj.players, deck: shuffledDeck, sender });
+    while (checkTriple(deck)) {
+        deck = splitDeckToPlayers({ players: gameRoomObj.players, deck: shuffle(shuffledDeck), sender });
+    }
 
     return {
         deck,
         visible: {
             start: true,
             playingPlayers: [...gameRoomObj.players],
-            turn,
+            sender,
+            receiver,
+            cardOffer: null,
+            offerCount: 0,
+            action: 'sender',
         }
     };
 }
 
+const checkVictory = (deck) => {
+    let victory = false;
+    if (deck) {
+        const won = (cards) => cards.length === 4 && cards.every(value => value === cards[0]);
+        const winner = (pair => pair && pair[0])(Object.entries(deck).filter(([_player, cards]) => won(cards))[0]);
+        const loser = (pair => pair && pair[0])(Object.entries(deck).filter(([_player, cards]) => cards.includes(0))[0])
+        if (winner && loser) {
+            victory = { winner, loser };
+        }
+    }
+    return victory;
+}
+
 module.exports = {
     newGameState,
+    checkVictory,
 }

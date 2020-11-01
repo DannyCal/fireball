@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import io from 'socket.io-client';
 import Card from './Card';
 
-const socket = io(`http://localhost:4000/`);
+const backend = '192.168.137.1'
+const socket = io(`${backend}:4000/`);
 
 
 const SyncedSession = ({ gameRoomId }) => {

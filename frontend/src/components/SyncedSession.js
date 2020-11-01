@@ -138,7 +138,7 @@ const SyncedSession = ({ gameRoomId }) => {
             {sender === playerId ? "Your'e the sender." : ""}
             {receiver === playerId ? "Your'e the receiver." : ""}
             <br />
-            {sender === playerId && action === 'sender' && <button onClick={offerCardToReceiver} disabled={!(cardOffer >= 0)}>Offer card to {receiver}!</button>}
+            {sender === playerId && action === 'sender' && <button onClick={offerCardToReceiver} disabled={cardOffer === null}>Offer card to {receiver}!</button>}
             {receiver === playerId && action === 'receiver' && <button onClick={acceptOffer}>Accept!</button>}
             {receiver === playerId && action === 'receiver' && <button onClick={declineOffer}>Decline!</button>}
         </div>}

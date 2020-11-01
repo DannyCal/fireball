@@ -47,9 +47,9 @@ const newGameState = (gameRoomObj) => {
             .reduce((total, current) => total.concat(current), []));
     let deck = splitDeckToPlayers({ players: gameRoomObj.players, deck: shuffledDeck, sender });
     while (checkTriple(deck)) {
+        console.log('Unfair!');
         deck = splitDeckToPlayers({ players: gameRoomObj.players, deck: shuffle(shuffledDeck), sender });
     }
-
     return {
         deck,
         visible: {
@@ -57,9 +57,9 @@ const newGameState = (gameRoomObj) => {
             playingPlayers: [...gameRoomObj.players],
             sender,
             receiver,
-            cardOffer: null,
             offerCount: 0,
             action: 'sender',
+            // scores: {},
         }
     };
 }

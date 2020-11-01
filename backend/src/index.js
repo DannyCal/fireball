@@ -1,9 +1,14 @@
 const app = require('express')();
 const http = require('http').Server(app);
-const io = require('socket.io')(http);
+const io = require('socket.io')(http, { pingInterval: 10000, pingTimeout: 30000 });
+const pouchdb = require('pouchdb');
 const { newGameState, checkVictory } = require('./gameFunctions');
 
-let db = {};
+let db = new pouchdb('fireballdb');
+const idleTimeout = 600000; // 10 Minutes
+
+if (process.argv.includes('--reset-db'))
+    db.destroy().then(() => { db = new pouchdb('fireballdb'); })
 
 io.on('connection', socket => {
 
@@ -18,27 +23,55 @@ io.on('connection', socket => {
         socket.disconnect();
     }
 
+    const timestamp = () => String(new Date().getTime());
+
+    const verifyGameRoomTimestamp = gameRoomId => new Promise((res, _rej) => {
+        db.get(gameRoomId, (err, doc) => {
+            if (err) { res(null); }
+            else if (doc && doc.timestamp && (Number(timestamp()) - Number(doc.timestamp) > idleTimeout)) {
+                console.log(`Room ${gameRoomId} has been idle for too long, restarting...`);
+                db.remove(gameRoomId, doc._rev).then(() => { res(null); });
+            }
+            else { res(doc); }
+        })
+    })
+
+    // TODO
+    /*
+        1. Transform all listeners to pouchdb
+        2. Verify timestamp before every action (on join-room - only if the room exists);
+    */
+
     socket.on('join-room', ({ gameRoomId, playerId }) => {
         socket.join(gameRoomId);
-        console.log(db[gameRoomId]);
-        if (db[gameRoomId]) {
-            db[gameRoomId].players.push(playerId);
-        } else {
-            db[gameRoomId] = { players: [playerId], roomKey: String(new Date().getTime()) };
-        }
-        if (!db[gameRoomId].admin) {
-            db[gameRoomId].admin = playerId;
-            io.to(gameRoomId).emit('set-admin', ({ adminId: playerId }));
-            console.log(`Admin of room ${gameRoomId} is now ${db[gameRoomId].admin}`);
-        }
-        console.log(`Player ${playerId} joined room ${gameRoomId}`);
-        io.to(gameRoomId).emit('update-players', {
-            msg: `Player ${playerId} joined room ${gameRoomId}. [ADMIN: ${db[gameRoomId].admin}] [KEY: ${db[gameRoomId].roomKey}]`,
-            players: db[gameRoomId].players,
-            playingPlayers: db[gameRoomId].gameState && db[gameRoomId].gameState.visible && db[gameRoomId].gameState.visible.playingPlayers,
-            newAdminId: db[gameRoomId].admin,
-            roomKey: db[gameRoomId].roomKey
-        });
+        verifyGameRoomTimestamp(gameRoomId).then(doc => {
+            let gameRoom = null;
+            if (doc) { gameRoom = doc; }
+            console.log(gameRoom);
+            if (gameRoom) {
+                gameRoom.players.push(playerId);
+            } else {
+                gameRoom = { players: [playerId], roomKey: timestamp() };
+            }
+            if (!gameRoom.admin) {
+                gameRoom.admin = playerId;
+                io.to(gameRoomId).emit('set-admin', ({ adminId: playerId }));
+                console.log(`Admin of room ${gameRoomId} is now ${gameRoom.admin}`);
+            }
+            db.put({ _id: gameRoomId, ...(gameRoom ? { _rev: gameRoom._rev } : {}), timestamp: timestamp(), ...gameRoom }, { force: true }, (err, res) => {
+                if (err) { return console.log(err); }
+                if (res && res.ok) {
+                    console.log(`Player ${playerId} joined room ${gameRoomId}`);
+                    io.to(gameRoomId).emit('update-players', {
+                        msg: `Player ${playerId} joined room ${gameRoomId}. [ADMIN: ${gameRoom.admin}] [KEY: ${gameRoom.roomKey}]`,
+                        players: gameRoom.players,
+                        playingPlayers: gameRoom.gameState && gameRoom.gameState.visible && gameRoom.gameState.visible.playingPlayers,
+                        newAdminId: gameRoom.admin,
+                        roomKey: gameRoom.roomKey
+                    });
+                }
+            })
+        })
     });
 
     socket.on('leave-room', ({ gameRoomId, playerId, roomKey }) => {

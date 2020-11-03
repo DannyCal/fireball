@@ -1,8 +1,11 @@
 const app = require('express')();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http, { pingInterval: 10000, pingTimeout: 30000 });
+const fs = require('fs');
 const pouchdb = require('pouchdb');
 const { newGameState, checkVictory } = require('./gameFunctions');
+
+fs.rmdirSync('fireballdb', { recursive: true });
 
 let db = new pouchdb('fireballdb');
 const idleTimeout = 600000; // 10 Minutes
@@ -218,6 +221,8 @@ const setup = (db) => io.on('connection', socket => {
 
 setup(db);
 
-http.listen(4000, '192.168.137.1', () => {
+// const host = '3.128.129.180';
+const host = '0.0.0.0';
+http.listen(4000, '', () => {
     console.log('Server listening on port 4000');
 });

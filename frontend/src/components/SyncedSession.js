@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import io from 'socket.io-client';
 import Card from './Card';
+import '../css/general.css';
 
-// const backend = 'https://192.168.137.1'
-const backend = 'http://192.168.137.1'
+// const backend = 'localhost';
+const backend = 'http://3.128.129.180/'
 const socket = io(`${backend}:4000/`);
 
 
@@ -103,28 +104,50 @@ const SyncedSession = ({ gameRoomId }) => {
     }, [gameState]);
     useEffect(() => { requestCardsUpdate(); setRestrictedCards([]); }, [sender]);
 
-    return <>
-        <h1>Heyo {playerId}</h1>
-        {joined && (players.length ? (<div>
-            Player List:
-            <ol>
-                {players.length && players.map(p => <li key={p}>{p}{playingPlayers && playingPlayers.includes(p) && ' [Playing]'}{p === adminId && <b>{' [Admin]'}</b>}</li>)}
-            </ol>
-            <br />
-            {adminId === playerId && <button onClick={startGame} disabled={!(players && players.length >= 3)}>{started ? 'Restart Game' : 'Start Game!'}</button>}
+    return <div className='app' style={{
+        minHeight: '100%',
+        minWidth: '100%',
+        display: 'flex',
+        justifyContent: 'start',
+        alignItems: 'center',
+        flexDirection: 'column',
+        textAlign: 'center'
+    }}>
 
+        {/* Title */}
+        <h1>{`${started ? 'Good luck' : 'Hello'}, ${playerId || 'wizard'}!`}</h1>
+
+        {/* Players */}
+        {joined && (players.length ? (<div>
+            Wizards in this class:
+            <ul style={{ textAlign: 'start' }}>
+                {players.length && players.map(p => <li key={p}>
+                    {p}
+                    {playingPlayers && playingPlayers.includes(p) && ' [Playing]'}
+                    {p === sender && <b>{' [Sender]'}</b>}
+                    {p === receiver && <b>{' [Receiver]'}</b>}
+                    {p === adminId && <b>{' [Admin]'}</b>}
+                </li>)}
+            </ul>
+            <br />
+            {adminId === playerId && <button className={`${started ? 'blue' : 'red'} fade`} onClick={startGame} disabled={!(players && players.length >= 3)}>{started ? 'Restart Game' : 'Start Game!'}</button>}
+            <br />
         </div>) : 'Loading...')}
+
+        {/* Join */}
         {!joined && <div>
-            Player Name: <input type='text' onChange={event => setPlayerId(event.target.value)}></input>
-            <button onClick={joinRoom} disabled={!playerId || players.includes(playerId)}>Join Room {gameRoomId}!</button>
+            Wizard Name: <input type='text' onChange={event => setPlayerId(event.target.value)}></input>
+            <br />
+            <button className='orange fade' onClick={joinRoom} disabled={!playerId || players.includes(playerId)}>Join Class {gameRoomId}!</button>
         </div>}
 
+        {/* Cards */}
         {started && !victory && <div>
             Your cards:
-            <br />
-            <span style={{ display: 'flex', flexDirection: 'row' }}>
+            <br /><br />
+            <span style={{ display: 'flex', flexDirection: 'row', margin: 'auto' }}>
                 {playerCards.length && playerCards.map((card, i) =>
-                    <Card key={i} value={card} onClick={
+                    <Card key={i} className='card' value={card} onClick={
                         (sender === playerId && action === 'sender' && !restrictedCards.includes(i)) ?
                             () => { setCardOffer(prevOffer => prevOffer === i ? null : i); } : null
                     } offered={cardOffer === i} restricted={action === 'sender' && restrictedCards.includes(i)} />
@@ -132,19 +155,19 @@ const SyncedSession = ({ gameRoomId }) => {
             </span>
         </div>}
 
+        {/* Victory */}
         {victory && <div>
+            <br /><br />
             Womp Womp! {victory[0]} assembled 4 matching gems! {victory[1]} got FIREBALLED!
         </div>}
 
+        {/* Info and Controls */}
         {started && !victory && <div>
-            {sender === playerId ? "Your'e the sender." : ""}
-            {receiver === playerId ? "Your'e the receiver." : ""}
-            <br />
-            {sender === playerId && action === 'sender' && <button onClick={offerCardToReceiver} disabled={cardOffer === null}>Offer card to {receiver}!</button>}
-            {receiver === playerId && action === 'receiver' && <button onClick={acceptOffer}>Accept!</button>}
-            {receiver === playerId && action === 'receiver' && <button onClick={declineOffer}>Decline!</button>}
+            {sender === playerId && action === 'sender' && <button className='blue fade' onClick={offerCardToReceiver} disabled={cardOffer === null}>Offer a card to {receiver}!</button>}
+            {receiver === playerId && action === 'receiver' && <button className='yellow fade' onClick={acceptOffer}>Accept!</button>}
+            {receiver === playerId && action === 'receiver' && <button className='red fade' onClick={declineOffer}>Decline!</button>}
         </div>}
-    </>
+    </div>
 
 
 }

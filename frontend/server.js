@@ -5,7 +5,7 @@ const fs = require('fs');
 
 const PUBLIC_PATH = path.resolve(__dirname, "build");
 const PORT = parseInt(process.env.PORT || "80", 10)
-const HOSTIP = 'http://3.128.129.180/';
+const HOSTIP = '3.128.129.180';
 const PUBLIC_URL = process.env.PUBLIC_URL || `http://${HOSTIP}:${PORT}`;
 const indexHtml = path.join(PUBLIC_PATH, "index.html");
 const indexHtmlContent = fs

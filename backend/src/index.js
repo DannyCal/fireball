@@ -1,5 +1,5 @@
 const app = require('express')();
-const http = require('http').Server(app);
+const http = require('http').createServer(app);
 const io = require('socket.io')(http, { pingInterval: 10000, pingTimeout: 30000 });
 const pouchdb = require('pouchdb');
 const { newGameState, checkVictory } = require('./gameFunctions');
@@ -55,12 +55,6 @@ const setup = (db) => io.on('connection', socket => {
         }
 
     }
-
-    // TODO
-    /*
-        1. Transform all listeners to pouchdb
-        2. Verify timestamp before every action (on join-room - only if the room exists);
-    */
 
     socket.on('join-room', ({ gameRoomId, playerId }) => {
         socket.join(gameRoomId);
@@ -224,6 +218,6 @@ const setup = (db) => io.on('connection', socket => {
 
 setup(db);
 
-http.listen(4000, () => {
+http.listen(4000, '192.168.137.1', () => {
     console.log('Server listening on port 4000');
 });

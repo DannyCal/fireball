@@ -3,13 +3,13 @@ import { useParams } from "react-router-dom";
 import SyncedSession from './SyncedSession';
 
 
-const GameRoom = () => {
+const GameRoom = ({ socket }) => {
 
     let { gameRoomId } = useParams();
 
     return (
         <div>
-            <SyncedSession gameRoomId={gameRoomId} />
+            <SyncedSession gameRoomId={gameRoomId} socket={socket} />
         </div>
     )
 }

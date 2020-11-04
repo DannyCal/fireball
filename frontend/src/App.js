@@ -1,16 +1,21 @@
 import React from 'react';
-import SyncedSession from './components/SyncedSession';
 import GameRoom from './components/GameRoom';
-import { BrowserRouter, Route } from 'react-router-dom';
+import Homepage from './components/Homepage';
+import { BrowserRouter, Route, Switch } from 'react-router-dom';
+import io from 'socket.io-client';
 
+
+const backend = 'localhost';
+// const backend = '3.128.129.180'
+const socket = io(`${backend}:4000/`);
 
 function App() {
   return (
-    // <Editor />
     <BrowserRouter>
-      <Route path='/' exact render={() => 'Home sweet home!'} />
-      <Route path='/:gameRoomId' component={GameRoom} />
-      {/* <SyncedSession /> */}
+      <Switch>
+        <Route path='/room/:gameRoomId' render={() => <GameRoom socket={socket} />} />
+        <Route path='/*' render={() => <Homepage socket={socket} />} />
+      </Switch>
     </BrowserRouter>
   );
 }

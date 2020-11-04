@@ -4,6 +4,7 @@ const io = require('socket.io')(http, { pingInterval: 10000, pingTimeout: 30000 
 const fs = require('fs');
 const pouchdb = require('pouchdb');
 const { newGameState, checkVictory } = require('./gameFunctions');
+const { generateRandomName } = require('./appFunctions');
 
 fs.rmdirSync('fireballdb', { recursive: true });
 
@@ -56,8 +57,28 @@ const setup = (db) => io.on('connection', socket => {
         } else {
             db.remove(gameRoom).then(res => { console.log(`Removing room ${gameRoom._id}... [${res.ok}]`); });
         }
-
     }
+
+    socket.on('request-name', () => {
+        db.allDocs((err, result) => {
+            if (err) { return console.warn(err); }
+            const existing = result.rows.map(row => row.id);
+            const name = generateRandomName(existing);
+            socket.emit('random-name', { name });
+        })
+    });
+
+    socket.on('room-exists', ({ roomName }) => {
+        db.get(roomName, (err, result) => {
+            if (err || !(result && result._id)) {
+                socket.emit('room-doesnt-exist', ({ roomName }));
+                return;
+            } else {
+                socket.emit('room-does-exist', ({ roomName }));
+            }
+
+        })
+    });
 
     socket.on('join-room', ({ gameRoomId, playerId }) => {
         socket.join(gameRoomId);
@@ -142,13 +163,13 @@ const setup = (db) => io.on('connection', socket => {
                     gs = gameRoom.gameState;
                     gsv = gs.visible;
                     gs.cardOffer = cardOffer;
-                    console.log(`Card offer no. ${gsv.offerCount} made by ${gsv.sender} to ${gsv.receiver} (Card index ${cardOffer})`);
+                    console.log(`Card offer no. ${gsv.offerCount + 1} made by ${gsv.sender} to ${gsv.receiver} (Card index ${cardOffer})`);
                     const nPlayers = gsv.playingPlayers.length;
                     const currentPlayerIndex = gsv.playingPlayers.indexOf(playerId);
                     const nextPlayer = gsv.playingPlayers[(currentPlayerIndex + 1) % nPlayers];
                     const nextReceiver = gsv.playingPlayers[(currentPlayerIndex + 2) % nPlayers];
                     const offerCount = gsv.offerCount;
-                    if (offerCount < 3) {
+                    if (offerCount < 2) {
                         // Send Accept/Reject
                         gsv.action = 'receiver';
                         gsv.offerCount++;
@@ -207,7 +228,7 @@ const setup = (db) => io.on('connection', socket => {
                     gsv = gs.visible;
                     console.log(`Card offer no. ${gsv.offerCount} made by ${gsv.sender} to ${gsv.receiver} is DECLINED`);
                     gsv.action = 'sender';
-                    gsv.offerCount++;
+                    // gsv.offerCount++;
                     updateGameRoom(gameRoom, () => {
                         updateGameState({ gameRoomId, gameRoom });
                     });
@@ -215,6 +236,10 @@ const setup = (db) => io.on('connection', socket => {
             } else { console.error(`Wrong key [${roomKey}] used in ${gameRoomId} [DECLINE]`); sendWrongKeyError(); }
         });
     });
+
+    socket.on('disconnect', () => {
+        console.log('A user has disconnected');
+    })
 
     console.log("A new user has connected.");
 });

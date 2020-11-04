@@ -1,14 +1,10 @@
 import React, { useEffect, useState } from "react";
-import io from 'socket.io-client';
 import Card from './Card';
 import '../css/general.css';
-
-// const backend = 'localhost';
-const backend = '3.128.129.180'
-const socket = io(`${backend}:4000/`);
+import logo from '../assets/png/fireball_logo.png';
 
 
-const SyncedSession = ({ gameRoomId }) => {
+const SyncedSession = ({ gameRoomId, socket }) => {
 
     const [playerId, setPlayerId] = useState('')
     const [players, setPlayers] = useState([]);
@@ -24,6 +20,7 @@ const SyncedSession = ({ gameRoomId }) => {
     const [receiver, setReceiver] = useState('');
     const [action, setAction] = useState('sender');
     const [cardOffer, setCardOffer] = useState(null);
+    const [offerCount, setOfferCount] = useState(0);
     const [restrictedCards, setRestrictedCards] = useState([]);
     const [victory, setVictory] = useState(false);
 
@@ -92,6 +89,17 @@ const SyncedSession = ({ gameRoomId }) => {
         started && socket.emit('request-cards-update', ({ gameRoomId, playerId, roomKey }))
     }
 
+    const countToWord = (count) => {
+        switch (count) {
+            case 1:
+                return 'FIRST';
+            case 2:
+                return 'SECOND';
+            default:
+                return '';
+        }
+    }
+
     // On gameState change
     useEffect(() => {
         console.log(gameState);
@@ -100,6 +108,7 @@ const SyncedSession = ({ gameRoomId }) => {
             setSender(gameState.sender);
             setReceiver(gameState.receiver);
             setAction(gameState.action);
+            setOfferCount(gameState.offerCount);
         }
     }, [gameState]);
     useEffect(() => { requestCardsUpdate(); setRestrictedCards([]); }, [sender]);
@@ -114,35 +123,40 @@ const SyncedSession = ({ gameRoomId }) => {
         textAlign: 'center'
     }}>
 
-        {/* Title */}
-        <h1>{`${started ? 'Good luck' : 'Hello'}, ${playerId || 'wizard'}!`}</h1>
+        <img src={logo} alt='Fireball' className='logo' />
 
-        {/* Players */}
-        {joined && (players.length ? (<div>
-            Wizards in this class:
-            <ul style={{ textAlign: 'start' }}>
-                {players.length && players.map(p => <li key={p}>
-                    {p}
-                    {playingPlayers && playingPlayers.includes(p) && ' [Playing]'}
-                    {p === sender && <b>{' [Sender]'}</b>}
-                    {p === receiver && <b>{' [Receiver]'}</b>}
-                    {p === adminId && <b>{' [Admin]'}</b>}
-                </li>)}
-            </ul>
-            <br />
-            {adminId === playerId && <button className={`${started ? 'blue' : 'red'} fade`} onClick={startGame} disabled={!(players && players.length >= 3)}>{started ? 'Restart Game' : 'Start Game!'}</button>}
-            <br />
-        </div>) : 'Loading...')}
+        {/* Title */}
+        <h1>{`${started ? 'Whack \'em' : 'Hello'}, ${playerId || 'wizard'}!`}</h1>
 
         {/* Join */}
         {!joined && <div>
-            Wizard Name: <input type='text' onChange={event => setPlayerId(event.target.value)}></input>
+            Wizard Name: <input type='text' onChange={event => setPlayerId(event.target.value)} value={playerId}></input>
             <br />
-            <button className='orange fade' onClick={joinRoom} disabled={!playerId || players.includes(playerId)}>Join Class {gameRoomId}!</button>
+            <button className='orange fade' onClick={joinRoom} disabled={!playerId || players.includes(playerId)}>Enter classroom {gameRoomId}!</button>
         </div>}
+
+        {/* Players */}
+        {joined && (players.length ? (<div>
+            Wizards in this classroom:
+            <div style={{ width: 'fit-content', margin: 'auto' }}>
+                <ul style={{ textAlign: 'start' }}>
+                    {players.length && players.map(p => <li key={p}>
+                        {p}
+                        {playingPlayers && playingPlayers.includes(p) && ' [Playing]'}
+                        {p === sender && <b>{' [Sender]'}</b>}
+                        {p === receiver && <b>{' [Receiver]'}</b>}
+                        {p === adminId && <b>{' [Admin]'}</b>}
+                    </li>)}
+                </ul>
+            </div>
+
+            {adminId === playerId && <button className={`${started ? 'blue' : 'red'} fade`} onClick={startGame} disabled={!(players && players.length >= 3)}>{started ? 'Restart Game' : (players && players.length >= 3 ? 'Start Game!' : 'Need at least 3 wizards to play')}</button>}
+            <br />
+        </div>) : 'Loading...')}
 
         {/* Cards */}
         {started && !victory && <div>
+            <br />
             Your cards:
             <br /><br />
             <span style={{ display: 'flex', flexDirection: 'row', margin: 'auto' }}>
@@ -164,8 +178,11 @@ const SyncedSession = ({ gameRoomId }) => {
         {/* Info and Controls */}
         {started && !victory && <div>
             {sender === playerId && action === 'sender' && <button className='blue fade' onClick={offerCardToReceiver} disabled={cardOffer === null}>Offer a card to {receiver}!</button>}
-            {receiver === playerId && action === 'receiver' && <button className='yellow fade' onClick={acceptOffer}>Accept!</button>}
-            {receiver === playerId && action === 'receiver' && <button className='red fade' onClick={declineOffer}>Decline!</button>}
+            {receiver === playerId && action === 'receiver' && <>
+                This is {sender}'s {countToWord(offerCount)} [{offerCount}] offer!
+                <button className='blue fade' onClick={acceptOffer}>Accept!</button>
+                <button className='red fade' onClick={declineOffer}>Decline!</button>
+            </>}
         </div>}
     </div>
 

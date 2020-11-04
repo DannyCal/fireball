@@ -1,16 +1,18 @@
-div {
-    font-family: 'Roboto', sans-serif;
+div,
+button,
+input {
+    font-family: 'Work sans', sans-serif;
 }
 
 button.fade {
     display: inline-block;
+    width: 100%;
     padding: 0.35em 1.2em;
     border: 0.1em solid #FFFFFF;
-    margin: 0.4em 0.3em 0.3em 0.4em;
+    margin: 0.4em 0.3em;
     border-radius: 0.25em;
     box-sizing: border-box;
     text-decoration: none;
-    font-family: 'Roboto', sans-serif;
     font-weight: 400;
     font-size: 120%;
     color: #FFFFFF;
@@ -23,8 +25,8 @@ button.fade {
 } */
 
 button.fade:disabled {
-    color: #999999;
-    background-color: #d3cbbb;
+    color: #ffffff;
+    background-color: #868686;
 }
 
 button.orange {
@@ -89,4 +91,19 @@ div.app {
     width: 100%;
     height: 100%;
     background: rgba(203, 237, 243, 0.2);
+}
+
+input[type=text] {
+    padding: 1% 1%;
+    margin: 1% 1%;
+    width: 100%;
+    border: none;
+    border-bottom: 2px solid black;
+    background-color: transparent;
+    text-align: center;
+}
+
+input[type=text]:focus {
+    outline: none;
+    border-bottom: 2px solid orange;
 }

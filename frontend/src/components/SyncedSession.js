@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Card from './Card';
 import '../css/general.css';
-import logo from '../assets/png/fireball_logo.png';
+import logo from '../assets/png/fireballLogo.png';
 
 
 const SyncedSession = ({ gameRoomId, socket }) => {
@@ -24,9 +24,9 @@ const SyncedSession = ({ gameRoomId, socket }) => {
     const [restrictedCards, setRestrictedCards] = useState([]);
     const [victory, setVictory] = useState(false);
 
-
     useEffect(() => {
 
+        socket.on('heartbeat', () => { console.log('beating...'); socket.emit('heartbeat-ok') });
         socket.on('wrong-key', () => { window.location.reload(); })
         socket.on('update-players', ({ msg, players, playingPlayers, newAdminId, roomKey }) => {
             console.log(msg);
@@ -124,6 +124,7 @@ const SyncedSession = ({ gameRoomId, socket }) => {
     }}>
 
         <img src={logo} alt='Fireball' className='logo' />
+        <text className='room-id-title'>Classroom:{gameRoomId}</text>
 
         {/* Title */}
         <h1>{`${started ? 'Whack \'em' : 'Hello'}, ${playerId || 'wizard'}!`}</h1>
@@ -178,11 +179,18 @@ const SyncedSession = ({ gameRoomId, socket }) => {
         {/* Info and Controls */}
         {started && !victory && <div>
             {sender === playerId && action === 'sender' && <button className='blue fade' onClick={offerCardToReceiver} disabled={cardOffer === null}>Offer a card to {receiver}!</button>}
-            {receiver === playerId && action === 'receiver' && <>
-                This is {sender}'s {countToWord(offerCount)} [{offerCount}] offer!
+            {receiver === playerId && (
+                (action === 'receiver' && <>
+                    This is {sender}'s {countToWord(offerCount)} [{offerCount}] offer!
                 <button className='blue fade' onClick={acceptOffer}>Accept!</button>
-                <button className='red fade' onClick={declineOffer}>Decline!</button>
-            </>}
+                    <button className='red fade' onClick={declineOffer}>Decline!</button>
+                </>) ||
+                (action === 'sender' && <>
+                    Your'e about to receive a card from {sender}.
+            </>))}
+            {![sender, receiver].includes(playerId) && <>
+                {sender} is about to send {receiver} a card.
+                </>}
         </div>}
     </div>
 

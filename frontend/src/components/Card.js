@@ -1,17 +1,26 @@
 import React from 'react';
 import { valueToSVG } from '../assets/svg/cardSvgs';
-// import { card } from '../assets/svg/cardSvg';
+import hexaBlue from '../assets/png/hexaBlue.png';
+import hexaGreen from '../assets/png/hexaGreen.png';
+import hexaOrange from '../assets/png/hexaOrange.png';
+import hexaPurple from '../assets/png/hexaPurple.png';
+import hexaRed from '../assets/png/hexaRed.png';
+import hexaYellow from '../assets/png/hexaYellow.png';
+import hexaFireball from '../assets/png/hexaFireball.png';
+
+
 
 
 const Card = ({ className, color, value, onClick, offered = null, restricted = null }) => {
 
-    // const scale = (window && window.innerHeight && (window.innerHeight / 1200)) || 0.5
+    const valueToPNG = [hexaFireball, hexaRed, hexaGreen, hexaYellow, hexaOrange, hexaPurple, hexaBlue];
 
     return <div className={className} onClick={onClick} style={{ width: 'min-content', height: 'min-content' }}>
         {offered && 'Offer'}
         {restricted && "Declined!"}
-        {valueToSVG[value](0.2)}
+        {/* {valueToSVG[value](0.2)} */}
         {/* <span>{card(scale, color)}</span> */}
+        <img className='cardImg' src={valueToPNG[value]} />
     </div>
 }
 

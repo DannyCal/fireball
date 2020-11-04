@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import logo from '../assets/png/fireball_logo.png';
+import logo from '../assets/png/fireballLogo.png';
 import '../css/general.css';
 
 

@@ -82,6 +82,7 @@ const setup = (db) => io.on('connection', socket => {
 
     socket.on('join-room', ({ gameRoomId, playerId }) => {
         socket.join(gameRoomId);
+        hearbeat(0, { gameRoomId, playerId });
         verifiedGetGameRoom(gameRoomId).then(gameRoom => {
             if (gameRoom) {
                 gameRoom.players.push(playerId);
@@ -106,9 +107,9 @@ const setup = (db) => io.on('connection', socket => {
         });
     });
 
-    socket.on('leave-room', ({ gameRoomId, playerId, roomKey }) => {
+    const leaveRoom = ({ gameRoomId, playerId, roomKey }) => {
         verifiedGetGameRoom(gameRoomId).then(gameRoom => {
-            if (gameRoom && gameRoom.players && gameRoom.players.includes(playerId) && gameRoom.roomKey === roomKey) {
+            if (gameRoom && gameRoom.players && gameRoom.players.includes(playerId) && [gameRoom.roomKey, 'OVERRIDE'].includes(roomKey)) {
                 if (gameRoom && gameRoom.players) {
                     const playerIndex = gameRoom.players.indexOf(playerId);
                     gameRoom.players.splice(playerIndex, 1);
@@ -128,11 +129,12 @@ const setup = (db) => io.on('connection', socket => {
             } else { console.error(`Wrong key [${roomKey}] used in ${gameRoomId} [LEAVE]`); sendWrongKeyError(); }
         });
         socket.leave(gameRoomId);
-    });
+    };
+    socket.on('leave-room', leaveRoom);
 
     socket.on('start-game', ({ gameRoomId, roomKey }) => {
         verifiedGetGameRoom(gameRoomId).then(gameRoom => {
-            if (gameRoom && gameRoom.roomKey === roomKey) {
+            if (gameRoom && [gameRoom.roomKey, 'OVERRIDE'].includes(roomKey)) {
                 if (gameRoom && gameRoom.players) {
                     gameRoom.gameState = newGameState(gameRoom);
                     updateGameRoom(gameRoom, () => {
@@ -148,7 +150,7 @@ const setup = (db) => io.on('connection', socket => {
 
     socket.on('request-cards-update', ({ gameRoomId, playerId, roomKey }) => {
         verifiedGetGameRoom(gameRoomId).then(gameRoom => {
-            if (gameRoom && gameRoom.roomKey === roomKey) {
+            if (gameRoom && [gameRoom.roomKey, 'OVERRIDE'].includes(roomKey)) {
                 updateGameRoom(gameRoom, () => {
                     socket.emit('cards-update', ({ cards: gameRoom.gameState.deck[playerId] }));
                 });
@@ -158,7 +160,7 @@ const setup = (db) => io.on('connection', socket => {
 
     socket.on('card-offer', ({ gameRoomId, playerId, cardOffer, roomKey }) => {
         verifiedGetGameRoom(gameRoomId).then(gameRoom => {
-            if (gameRoom && gameRoom.roomKey === roomKey) {
+            if (gameRoom && [gameRoom.roomKey, 'OVERRIDE'].includes(roomKey)) {
                 if (gameRoom.gameState) {
                     gs = gameRoom.gameState;
                     gsv = gs.visible;
@@ -195,7 +197,7 @@ const setup = (db) => io.on('connection', socket => {
 
     socket.on('accept-offer', ({ gameRoomId, roomKey }) => {
         verifiedGetGameRoom(gameRoomId).then(gameRoom => {
-            if (gameRoom && gameRoom.roomKey === roomKey) {
+            if (gameRoom && [gameRoom.roomKey, 'OVERRIDE'].includes(roomKey)) {
                 if (gameRoom && gameRoom.gameState) {
                     gs = gameRoom.gameState;
                     console.log(gs)
@@ -221,7 +223,7 @@ const setup = (db) => io.on('connection', socket => {
 
     socket.on('decline-offer', ({ gameRoomId, roomKey }) => {
         verifiedGetGameRoom(gameRoomId).then(gameRoom => {
-            if (gameRoom && gameRoom.roomKey === roomKey) {
+            if (gameRoom && [gameRoom.roomKey, 'OVERRIDE'].includes(roomKey)) {
                 if (gameRoom && gameRoom.gameState) {
                     gs = gameRoom.gameState;
                     console.log(gs)
@@ -239,7 +241,29 @@ const setup = (db) => io.on('connection', socket => {
 
     socket.on('disconnect', () => {
         console.log('A user has disconnected');
-    })
+        socket.disconnect();
+    });
+
+    var answered = false;
+    socket.on('heartbeat-ok', () => { answered = true; })
+    const hearbeat = (missed, details) => {
+        if (missed >= 2) {
+            console.log(`Over 3 missed heartbeats for ${details.playerId} on ${details.gameRoomId}. Kicking...`);
+            details.roomKey = 'OVERRIDE';
+            leaveRoom(details);
+        } else {
+            // console.log(`Heartbeat sent [DETAILS: ${details.playerId} @ ${details.gameRoomId}] [MISSED: ${missed}]`);
+            socket.emit('heartbeat');
+            setTimeout(() => {
+                if (answered) {
+                    missed = 0;
+                } else {
+                    missed++;
+                }
+                hearbeat(missed, details);
+            }, 10000)
+        }
+    };
 
     console.log("A new user has connected.");
 });

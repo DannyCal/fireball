@@ -270,8 +270,6 @@ const setup = (db) => io.on('connection', socket => {
 
 setup(db);
 
-// const host = '3.128.129.180';
-const host = '0.0.0.0';
 http.listen(4000, '', () => {
     console.log('Server listening on port 4000');
 });

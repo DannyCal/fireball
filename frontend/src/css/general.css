@@ -9,7 +9,7 @@ button.fade {
     width: 100%;
     padding: 0.35em 1.2em;
     border: 0.1em solid #FFFFFF;
-    margin: 0.4em 0.3em;
+    margin: 0.4em;
     border-radius: 0.25em;
     box-sizing: border-box;
     text-decoration: none;
@@ -30,34 +30,27 @@ button.fade:disabled {
 }
 
 button.orange {
-    background-color: #ebab22;
+    background-color: #ebab2231;
 }
 
 button.orange:hover {
-    background-color: #81611a;
+    background-color: #81601ab4;
 }
 
 button.red {
-    background-color: #fa2828;
+    background-color: #5f3535c9;
 }
 
 button.red:hover {
-    background-color: #8b0f0f;
+    background-color: #702d2d;
 }
 
 button.blue {
-    background-color: #3d72e4ec;
+    background-color: #576177ec;
 }
 
 button.blue:hover {
-    background-color: #00039bd7;
-}
-
-@media all and (max-width:30em) {
-    button.orange-fade {
-        display: block;
-        margin: 0.4em auto;
-    }
+    background-color: #00039b81;
 }
 
 div.card {
@@ -113,6 +106,6 @@ input[type=text]:focus {
 }
 
 .logo {
-    height: 15vh;
+    height: 13vh;
     width: auto;
 }

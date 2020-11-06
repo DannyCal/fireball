@@ -72,9 +72,8 @@ const SyncedSession = ({ gameRoomId, socket }) => {
     }
 
     const offerCardToReceiver = () => {
-        setRestrictedCards(prevDis => { const newDisOffer = cardOffer; return [...prevDis, newDisOffer] });
         socket.emit('card-offer', ({ gameRoomId, playerId, cardOffer, roomKey }));
-        setCardOffer(null);
+        setRestrictedCards(prevDis => { const newDisOffer = cardOffer; return [...prevDis, newDisOffer] });
     }
 
     const acceptOffer = () => {
@@ -100,6 +99,7 @@ const SyncedSession = ({ gameRoomId, socket }) => {
         }
     }
 
+    
     // On gameState change
     useEffect(() => {
         console.log(gameState);
@@ -109,6 +109,7 @@ const SyncedSession = ({ gameRoomId, socket }) => {
             setReceiver(gameState.receiver);
             setAction(gameState.action);
             setOfferCount(gameState.offerCount);
+            setCardOffer(null);
         }
     }, [gameState]);
     useEffect(() => { requestCardsUpdate(); setRestrictedCards([]); }, [sender]);
@@ -158,14 +159,14 @@ const SyncedSession = ({ gameRoomId, socket }) => {
         {/* Cards */}
         {started && !victory && <div>
             <br />
-            Your cards:
+            Your tiles:
             <br /><br />
             <span style={{ display: 'flex', flexDirection: 'row', margin: 'auto' }}>
                 {playerCards.length && playerCards.map((card, i) =>
                     <Card key={i} className='card' value={card} onClick={
                         (sender === playerId && action === 'sender' && !restrictedCards.includes(i)) ?
                             () => { setCardOffer(prevOffer => prevOffer === i ? null : i); } : null
-                    } offered={cardOffer === i} restricted={action === 'sender' && restrictedCards.includes(i)} />
+                    } offered={cardOffer === i} restricted={cardOffer !== i && action === 'sender' && sender === playerId && restrictedCards.includes(i)} />
                 )}
             </span>
         </div>}
@@ -173,12 +174,16 @@ const SyncedSession = ({ gameRoomId, socket }) => {
         {/* Victory */}
         {victory && <div>
             <br /><br />
-            Womp Womp! {victory[0]} assembled 4 matching gems! {victory[1]} got FIREBALLED!
+            <i>Womp Womp!</i>
+            <br />
+            {victory[0]} assembled 4 matching tiles!
+            <br />
+            <b>{victory[1]} got FIREBALLED!</b>
         </div>}
 
         {/* Info and Controls */}
         {started && !victory && <div>
-            {sender === playerId && action === 'sender' && <button className='blue fade' onClick={offerCardToReceiver} disabled={cardOffer === null}>Offer a card to {receiver}!</button>}
+            {sender === playerId && action === 'sender' && <button className='blue fade' onClick={offerCardToReceiver} disabled={cardOffer === null}>Offer a tile to {receiver}!</button>}
             {receiver === playerId && (
                 (action === 'receiver' && <>
                     This is {sender}'s {countToWord(offerCount)} [{offerCount}] offer!
@@ -186,10 +191,10 @@ const SyncedSession = ({ gameRoomId, socket }) => {
                     <button className='red fade' onClick={declineOffer}>Decline!</button>
                 </>) ||
                 (action === 'sender' && <>
-                    Your'e about to receive a card from {sender}.
+                    Your'e about to receive a tile from {sender}.
             </>))}
             {![sender, receiver].includes(playerId) && <>
-                {sender} is about to send {receiver} a card.
+                {sender} is about to send {receiver} a tile.
                 </>}
         </div>}
     </div>

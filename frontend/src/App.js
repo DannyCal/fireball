@@ -5,8 +5,8 @@ import { BrowserRouter, Route, Switch } from 'react-router-dom';
 import io from 'socket.io-client';
 
 
-// const backend = 'localhost';
-const backend = '3.128.129.180'
+const backend = 'localhost';
+// const backend = '3.128.129.180'
 const socket = io(`${backend}:4000/`);
 
 function App() {

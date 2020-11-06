@@ -1,5 +1,4 @@
 import React from 'react';
-import { valueToSVG } from '../assets/svg/cardSvgs';
 import hexaBlue from '../assets/png/hexaBlue.png';
 import hexaGreen from '../assets/png/hexaGreen.png';
 import hexaOrange from '../assets/png/hexaOrange.png';
@@ -11,15 +10,13 @@ import hexaFireball from '../assets/png/hexaFireball.png';
 
 
 
-const Card = ({ className, color, value, onClick, offered = null, restricted = null }) => {
+const Card = ({ className, value, onClick, offered = null, restricted = null }) => {
 
     const valueToPNG = [hexaFireball, hexaRed, hexaGreen, hexaYellow, hexaOrange, hexaPurple, hexaBlue];
 
     return <div className={className} onClick={onClick} style={{ width: 'min-content', height: 'min-content' }}>
         {offered && 'Offer'}
-        {restricted && "Declined!"}
-        {/* {valueToSVG[value](0.2)} */}
-        {/* <span>{card(scale, color)}</span> */}
+        {!offered && restricted && "Declined!"}
         <img className='cardImg' src={valueToPNG[value]} />
     </div>
 }

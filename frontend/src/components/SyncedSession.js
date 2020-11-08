@@ -27,7 +27,11 @@ const SyncedSession = ({ gameRoomId, socket }) => {
     useEffect(() => {
 
         socket.on('heartbeat', () => { console.log('beating...'); socket.emit('heartbeat-ok') });
-        socket.on('wrong-key', () => { window.location.reload(); })
+        socket.on('wrong-key', ({ gameState }) => {
+            if (gameState) {
+                setGameState(gameState);
+            } else { window.location.reload(); }
+        })
         socket.on('update-players', ({ msg, players, playingPlayers, newAdminId, roomKey }) => {
             console.log(msg);
             setPlayers(players);
@@ -46,8 +50,6 @@ const SyncedSession = ({ gameRoomId, socket }) => {
             setAction(newGameState.action);
             setPlayingPlayers(newGameState.playingPlayers);
         });
-
-
 
         return () => {
             leaveRoom();
@@ -99,7 +101,7 @@ const SyncedSession = ({ gameRoomId, socket }) => {
         }
     }
 
-    
+
     // On gameState change
     useEffect(() => {
         console.log(gameState);
@@ -125,7 +127,9 @@ const SyncedSession = ({ gameRoomId, socket }) => {
     }}>
 
         <img src={logo} alt='Fireball' className='logo' />
+        <text className='logo-title'>FIREBALL</text>
         <text className='room-id-title'>Classroom:{gameRoomId}</text>
+        {/* <a href={`whatsapp://send?text=Play Fireball with me! enter my room here: fireball.tk${window.location.pathname}!`} data-action="share/whatsapp/share">Share on Whatsapp</a> */}
 
         {/* Title */}
         <h1>{`${started ? 'Whack \'em' : 'Hello'}, ${playerId || 'wizard'}!`}</h1>

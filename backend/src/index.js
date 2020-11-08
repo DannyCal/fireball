@@ -24,9 +24,14 @@ const setup = (db) => io.on('connection', socket => {
         }))
     }
 
-    const sendWrongKeyError = () => {
-        socket.emit('wrong-key');
-        socket.disconnect();
+    const sendWrongKeyError = (gameRoomId) => {
+        verifiedGetGameRoom(gameRoomId).then(gameRoom => {
+            if (gameRoom) {
+                socket.emit('wrong-key', ({ gameState: gameRoom.gameState.visible }));
+            } else {
+                socket.disconnect();
+            }
+        })
     }
 
     const timestamp = () => String(new Date().getTime());
@@ -126,7 +131,7 @@ const setup = (db) => io.on('connection', socket => {
                         newAdminId: gameRoom.admin
                     });
                 });
-            } else { console.error(`Wrong key [${roomKey}] used in ${gameRoomId} [LEAVE]`); sendWrongKeyError(); }
+            } else { console.error(`Wrong key [${roomKey}] used in ${gameRoomId} [LEAVE]`); sendWrongKeyError(gameRoomId); }
         });
         socket.leave(gameRoomId);
     };
@@ -143,7 +148,7 @@ const setup = (db) => io.on('connection', socket => {
                     });
 
                 }
-            } else { console.error(`Wrong key [${roomKey}] used in ${gameRoomId} [START]`); sendWrongKeyError(); }
+            } else { console.error(`Wrong key [${roomKey}] used in ${gameRoomId} [START]`); sendWrongKeyError(gameRoomId); }
         });
 
     });
@@ -154,7 +159,7 @@ const setup = (db) => io.on('connection', socket => {
                 updateGameRoom(gameRoom, () => {
                     socket.emit('cards-update', ({ cards: gameRoom.gameState.deck[playerId] }));
                 });
-            } else { console.error(`Wrong key [${roomKey}] used in ${gameRoomId} [REQUEST]`); sendWrongKeyError(); }
+            } else { console.error(`Wrong key [${roomKey}] used in ${gameRoomId} [REQUEST]`); sendWrongKeyError(gameRoomId); }
         });
     });
 
@@ -191,7 +196,7 @@ const setup = (db) => io.on('connection', socket => {
                         updateGameState({ gameRoomId, gameRoom });
                     });
                 }
-            } else { console.error(`Wrong key [${roomKey}] used in ${gameRoomId} [OFFER]`); sendWrongKeyError(); }
+            } else { console.error(`Wrong key [${roomKey}] used in ${gameRoomId} [OFFER]`); sendWrongKeyError(gameRoomId); }
         });
     })
 
@@ -217,7 +222,7 @@ const setup = (db) => io.on('connection', socket => {
                         updateGameState({ gameRoomId, gameRoom });
                     });
                 }
-            } else { console.error(`Wrong key [${roomKey}] used in ${gameRoomId} [ACCEPT]`); sendWrongKeyError(); }
+            } else { console.error(`Wrong key [${roomKey}] used in ${gameRoomId} [ACCEPT]`); sendWrongKeyError(gameRoomId); }
         });
     });
 
@@ -235,7 +240,7 @@ const setup = (db) => io.on('connection', socket => {
                         updateGameState({ gameRoomId, gameRoom });
                     });
                 }
-            } else { console.error(`Wrong key [${roomKey}] used in ${gameRoomId} [DECLINE]`); sendWrongKeyError(); }
+            } else { console.error(`Wrong key [${roomKey}] used in ${gameRoomId} [DECLINE]`); sendWrongKeyError(gameRoomId); }
         });
     });
 

@@ -35,3 +35,5 @@
 [1106/172741.263:ERROR:exit_code_watcher_win.cc(87)] Failed to wait for process exit or stop event
 [1106/172741.411:ERROR:registration_protocol_win.cc(131)] TransactNamedPipe: The pipe has been ended. (0x6D)
 [1108/185815.392:ERROR:registration_protocol_win.cc(131)] TransactNamedPipe: The pipe has been ended. (0x6D)
+[1112/143743.068:ERROR:registration_protocol_win.cc(131)] TransactNamedPipe: The pipe has been ended. (0x6D)
+[1113/170746.230:ERROR:registration_protocol_win.cc(131)] TransactNamedPipe: The pipe has been ended. (0x6D)

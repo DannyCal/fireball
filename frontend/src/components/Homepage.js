@@ -49,8 +49,9 @@ const Homepage = ({ socket }) => {
         textAlign: 'center'
     }}>
         <img src={logo} alt='Fireball' className='logo' />
+        <text className='logo-title'>FIREBALL</text>
         <br />
-        <div style={{width: 'fit-content'}}>
+        <div style={{ width: 'fit-content' }}>
             <button className='blue fade' onClick={requestAvailableRoom}>Create a new classroom</button>
             <br />OR< br /><br />
             <input type='text' placeholder='Classroom Name' value={roomName} onChange={e => e && e.target && setRoomName(e.target.value.toUpperCase())} />

@@ -6,6 +6,7 @@ import logo from '../assets/png/fireballLogo.png';
 
 const SyncedSession = ({ gameRoomId, socket }) => {
 
+    const [language, setLanguage] = useState('en')
     const [playerId, setPlayerId] = useState('')
     const [players, setPlayers] = useState([]);
     const [playingPlayers, setPlayingPlayers] = useState([]);
@@ -93,9 +94,9 @@ const SyncedSession = ({ gameRoomId, socket }) => {
     const countToWord = (count) => {
         switch (count) {
             case 1:
-                return 'FIRST';
+                return { en: 'FIRST', il: 'ראשונה' }[language];
             case 2:
-                return 'SECOND';
+                return { en: 'SECOND', il: 'שנייה' }[language];
             default:
                 return '';
         }
@@ -123,32 +124,46 @@ const SyncedSession = ({ gameRoomId, socket }) => {
         justifyContent: 'start',
         alignItems: 'center',
         flexDirection: 'column',
-        textAlign: 'center'
+        textAlign: 'center',
+        direction: ['il'].includes(language) ? 'rtl' : 'ltr',
     }}>
 
         <img src={logo} alt='Fireball' className='logo' />
-        <text className='logo-title'>FIREBALL</text>
-        <text className='room-id-title'>Classroom:{gameRoomId}</text>
-        {/* <a href={`whatsapp://send?text=Play Fireball with me! enter my room here: fireball.tk${window.location.pathname}!`} data-action="share/whatsapp/share">Share on Whatsapp</a> */}
+        <text className='logo-title'>
+            {{ en: 'FIREBALL', il: 'פיירבול' }[language]}
+        </text>
+        <text className='room-id-title'>
+            {{ en: 'Classroom', il: 'כיתה' }[language]}:{gameRoomId}
+        </text>
+        <button onClick={() => {
+            setLanguage(lang => lang === 'il' ? 'en' : 'il');
+        }}>{{ en: 'עברית', il: 'English' }[language]}</button>
+        {/* <a href="https://api.whatsapp.com/send?text=www.google.com" data-action="share/whatsapp/share">Share via Whatsapp</a> */}
 
         {/* Title */}
-        <h1>{`${started ? 'Whack \'em' : 'Hello'}, ${playerId || 'wizard'}!`}</h1>
+        <h1>
+            {`${started ?
+                { en: 'Whack \'em', il: 'שחק אותה' }[language] :
+                { en: 'Hello', il: 'שלום' }[language]
+                }, ${playerId ||
+                { en: 'wizard', il: 'מכשף' }[language]}!`}
+        </h1>
 
         {/* Join */}
         {!joined && <div>
-            Wizard Name: <input type='text' onChange={event => setPlayerId(event.target.value)} value={playerId}></input>
+            {{ en: 'Wizard Name:', il: 'שם המכשף:' }[language]} <input type='text' onChange={event => setPlayerId(event.target.value)} value={playerId}></input>
             <br />
-            <button className='orange fade' onClick={joinRoom} disabled={!playerId || players.includes(playerId)}>Enter classroom {gameRoomId}!</button>
+            <button className='orange fade' onClick={joinRoom} disabled={!playerId || players.includes(playerId)}>{{ en: 'Enter classroom', il: 'כנס לכיתה' }[language]} {gameRoomId}!</button>
         </div>}
 
         {/* Players */}
         {joined && (players.length ? (<div>
-            Wizards in this classroom:
+            {{ en: 'Wizards in this classroom:', il: 'מכשפים בכיתה זו:' }[language]}
             <div style={{ width: 'fit-content', margin: 'auto' }}>
                 <ul style={{ textAlign: 'start' }}>
                     {players.length && players.map(p => <li key={p}>
                         {p}
-                        {playingPlayers && playingPlayers.includes(p) && ' [Playing]'}
+                        {playingPlayers && playingPlayers.includes(p) && { en: ' [Playing]', il: ' [משחק]' }[language]}
                         {p === sender && <b>{' [Sender]'}</b>}
                         {p === receiver && <b>{' [Receiver]'}</b>}
                         {p === adminId && <b>{' [Admin]'}</b>}
@@ -156,14 +171,20 @@ const SyncedSession = ({ gameRoomId, socket }) => {
                 </ul>
             </div>
 
-            {adminId === playerId && <button className={`${started ? 'blue' : 'red'} fade`} onClick={startGame} disabled={!(players && players.length >= 3)}>{started ? 'Restart Game' : (players && players.length >= 3 ? 'Start Game!' : 'Need at least 3 wizards to play')}</button>}
+            {adminId === playerId && <button className={`${started ? 'blue' : 'red'} fade`} onClick={startGame} disabled={!(players && players.length >= 3)}>
+                {started ?
+                    { en: 'Restart Game', il: 'התחל מחדש' }[language] :
+                    (players && players.length >= 3 ?
+                        { en: 'Start Game!', il: 'התחל משחק!' } :
+                        { en: 'Need at least 3 wizards to play', il: 'צריך לפחות 3 מכשפים בכדי לשחק' })[language]}
+            </button>}
             <br />
-        </div>) : 'Loading...')}
+        </div>) : { en: 'Loading...', il: 'טוען...' }[language])}
 
         {/* Cards */}
         {started && !victory && <div>
             <br />
-            Your tiles:
+            {{ en: 'Your tiles:', il: 'האבנים שלך:' }[language]}
             <br /><br />
             <span style={{ display: 'flex', flexDirection: 'row', margin: 'auto' }}>
                 {playerCards.length && playerCards.map((card, i) =>
@@ -187,19 +208,25 @@ const SyncedSession = ({ gameRoomId, socket }) => {
 
         {/* Info and Controls */}
         {started && !victory && <div>
-            {sender === playerId && action === 'sender' && <button className='blue fade' onClick={offerCardToReceiver} disabled={cardOffer === null}>Offer a tile to {receiver}!</button>}
+            {sender === playerId && action === 'sender' && <button className='blue fade' onClick={offerCardToReceiver} disabled={cardOffer === null}>
+                {{ en: `Offer a tile to ${receiver}!`, il: `הצע אבן ל-${receiver}` }[language]}
+            </button>}
             {receiver === playerId && (
                 (action === 'receiver' && <>
-                    This is {sender}'s {countToWord(offerCount)} [{offerCount}] offer!
-                <button className='blue fade' onClick={acceptOffer}>Accept!</button>
-                    <button className='red fade' onClick={declineOffer}>Decline!</button>
+                    {{ en: `This is ${sender}'s ${countToWord(offerCount)} [${offerCount}] offer.`, il: `זוהי ההצעה ה${countToWord(offerCount)} [${offerCount}] של ${sender}` }[language]}
+                    <button className='blue fade' onClick={acceptOffer}>
+                        {{ en: 'Accept!', il: 'קבל!' }[language]}
+                    </button>
+                    <button className='red fade' onClick={declineOffer}>
+                        {{ en: 'Decline!', il: 'דחה!' }[language]}
+                    </button>
                 </>) ||
                 (action === 'sender' && <>
-                    Your'e about to receive a tile from {sender}.
-            </>))}
+                    {{ en: `Your'e about to receive a tile from ${sender}.`, il: `אתה עומד לקבל אבן מ-${sender}` }[language]}
+                </>))}
             {![sender, receiver].includes(playerId) && <>
-                {sender} is about to send {receiver} a tile.
-                </>}
+                {{ en: `${sender} is about to send ${receiver} a tile.`, il: `${sender} עומד לשלוח אבן ל-${receiver}` }[language]}
+            </>}
         </div>}
     </div>
 

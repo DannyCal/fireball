@@ -3,6 +3,7 @@ import Card from './Card';
 import '../css/general.css';
 import logo from '../assets/png/fireballLogo.png';
 
+const isDebug = false
 
 const SyncedSession = ({ gameRoomId, socket }) => {
 
@@ -27,20 +28,20 @@ const SyncedSession = ({ gameRoomId, socket }) => {
 
     useEffect(() => {
 
-        socket.on('heartbeat', () => { console.log('beating...'); socket.emit('heartbeat-ok') });
+        socket.on('heartbeat', () => { isDebug && console.log('beating...'); socket.emit('heartbeat-ok') });
         socket.on('wrong-key', ({ gameState }) => {
             if (gameState) {
                 setGameState(gameState);
             } else { window.location.reload(); }
         })
         socket.on('update-players', ({ msg, players, playingPlayers, newAdminId, roomKey }) => {
-            console.log(msg);
+            isDebug && console.log(msg);
             setPlayers(players);
             setPlayingPlayers(playingPlayers);
             setAdminId(newAdminId);
             setRoomKey(roomKey);
         });
-        socket.on('update-game-state', ({ msg, newGameState }) => { msg && console.log(msg); setGameState(newGameState); });
+        socket.on('update-game-state', ({ msg, newGameState }) => { isDebug && msg && console.log(msg); setGameState(newGameState); });
         socket.on('cards-update', ({ cards }) => { setPlayerCards(cards) });
         socket.on('set-admin', ({ newAdminId }) => { setAdminId(newAdminId) });
         socket.on('game-started', ({ newGameState }) => {
@@ -105,7 +106,7 @@ const SyncedSession = ({ gameRoomId, socket }) => {
 
     // On gameState change
     useEffect(() => {
-        console.log(gameState);
+        isDebug && console.log(gameState);
         setVictory(gameState && gameState.victory && [gameState.victory.winner, gameState.victory.loser]);
         if (started) {
             setSender(gameState.sender);

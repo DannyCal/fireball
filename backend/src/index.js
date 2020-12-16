@@ -217,7 +217,6 @@ const setup = (db) => io.on('connection', socket => {
                     const nPlayers = gsv.playingPlayers.length;
                     console.log(`Card offer no. ${gsv.offerCount} made by ${gsv.sender} to ${gsv.receiver} is ACCEPTED`);
                     const sentCard = gs.deck[gsv.sender].splice(gs.cardOffer, 1)[0];
-                    console.log(sentCard);
                     gs.deck[gsv.receiver].push(sentCard);
                     gsv.victory = checkVictory(gs.deck);
                     gsv.sender = gsv.receiver;
@@ -238,7 +237,6 @@ const setup = (db) => io.on('connection', socket => {
             if (gameRoom && [gameRoom.roomKey, 'OVERRIDE'].includes(roomKey)) {
                 if (gameRoom?.gameState) {
                     gs = gameRoom.gameState;
-                    console.log(gs)
                     gsv = gs.visible;
                     console.log(`Card offer no. ${gsv.offerCount} made by ${gsv.sender} to ${gsv.receiver} is DECLINED`);
                     gsv.action = 'sender';
@@ -259,7 +257,6 @@ const setup = (db) => io.on('connection', socket => {
     var answered = false;
     socket.on('heartbeat-ok', () => { answered = true; })
     const hearbeat = (missed, details) => {
-        console.log(`HB [${details?.playerId}] [${missed}]`)
         if (missed >= 2) {
             console.log(`Over 3 missed heartbeats for ${details.playerId} on ${details.gameRoomId}. Kicking...`);
             details.roomKey = 'OVERRIDE';

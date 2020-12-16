@@ -5,6 +5,7 @@ const fs = require('fs');
 const pouchdb = require('pouchdb');
 const { newGameState, checkVictory } = require('./gameFunctions');
 const { generateRandomName } = require('./appFunctions');
+const { PromiseTimer } = require('./PromiseTimer');
 
 fs.rmdirSync('fireballdb', { recursive: true });
 
@@ -15,6 +16,8 @@ const idleTimeout = 600000; // 10 Minutes
 //     db.destroy().then(() => { db = new pouchdb('fireballdb'); setup(db); });
 // else
 //     setup(db);
+
+queues = {}
 
 const setup = (db) => io.on('connection', socket => {
 
@@ -52,7 +55,7 @@ const setup = (db) => io.on('connection', socket => {
     });
 
     const updateGameRoom = (gameRoom, onResOk) => {
-        if (gameRoom && gameRoom.players && gameRoom.players.length) {
+        if (gameRoom?.players?.length) {
             db.put({ _id: gameRoom._id, ...(gameRoom ? { _rev: gameRoom._rev } : {}), timestamp: timestamp(), ...gameRoom }, { force: true }, (err, res) => {
                 if (err) { return console.log(err); }
                 if (res && res.ok) {
@@ -104,7 +107,7 @@ const setup = (db) => io.on('connection', socket => {
                 io.to(gameRoomId).emit('update-players', {
                     msg: `Player ${playerId} joined room ${gameRoomId}. [ADMIN: ${gameRoom.admin}] [KEY: ${gameRoom.roomKey}]`,
                     players: gameRoom.players,
-                    playingPlayers: gameRoom.gameState && gameRoom.gameState.visible && gameRoom.gameState.visible.playingPlayers,
+                    playingPlayers: gameRoom?.gameState?.visible?.playingPlayers,
                     newAdminId: gameRoom.admin,
                     roomKey: gameRoom.roomKey
                 });
@@ -114,23 +117,27 @@ const setup = (db) => io.on('connection', socket => {
 
     const leaveRoom = ({ gameRoomId, playerId, roomKey }) => {
         verifiedGetGameRoom(gameRoomId).then(gameRoom => {
-            if (gameRoom && gameRoom.players && gameRoom.players.includes(playerId) && [gameRoom.roomKey, 'OVERRIDE'].includes(roomKey)) {
-                if (gameRoom && gameRoom.players) {
-                    const playerIndex = gameRoom.players.indexOf(playerId);
-                    gameRoom.players.splice(playerIndex, 1);
-                    if ((gameRoom.admin === playerId) && (gameRoom.players.length >= 0))
-                        gameRoom.admin = gameRoom.players[0];
-                } else {
-                    gameRoom = null;
-                }
-                updateGameRoom(gameRoom, () => {
-                    console.log(`Player ${playerId} left room ${gameRoomId}`);
-                    gameRoom && io.to(gameRoomId).emit('update-players', {
-                        msg: `Player ${playerId} left room ${gameRoomId}, [ADMIN: ${gameRoom.admin}]`,
-                        players: gameRoom.players,
-                        newAdminId: gameRoom.admin
+            if ([gameRoom?.roomKey, 'OVERRIDE'].includes(roomKey)) {
+                if (gameRoom?.players?.includes(playerId)) {
+                    if (gameRoom?.players) {
+                        const playerIndex = gameRoom.players.indexOf(playerId);
+                        gameRoom.players.splice(playerIndex, 1);
+                        if ((gameRoom.admin === playerId) && (gameRoom.players.length >= 0))
+                            gameRoom.admin = gameRoom.players[0];
+                    } else {
+                        gameRoom = null;
+                    }
+                    updateGameRoom(gameRoom, () => {
+                        console.log(`Player ${playerId} left room ${gameRoomId}`);
+                        gameRoom && io.to(gameRoomId).emit('update-players', {
+                            msg: `Player ${playerId} left room ${gameRoomId}, [ADMIN: ${gameRoom.admin}]`,
+                            players: gameRoom.players,
+                            newAdminId: gameRoom.admin
+                        });
                     });
-                });
+                } else {
+                    console.log(`Attempted to kick [${playerId}] but he is not inside [${gameRoomId}]`)
+                }
             } else { console.error(`Wrong key [${roomKey}] used in ${gameRoomId} [LEAVE]`); sendWrongKeyError(gameRoomId); }
         });
         socket.leave(gameRoomId);
@@ -143,7 +150,7 @@ const setup = (db) => io.on('connection', socket => {
                 if (gameRoom && gameRoom.players) {
                     gameRoom.gameState = newGameState(gameRoom);
                     updateGameRoom(gameRoom, () => {
-                        console.log(`Game starting on room ${gameRoomId} [PLAYING: ${gameRoom && gameRoom.gameState && gameRoom.gameState.visible && gameRoom.gameState.visible.playingPlayers}]`);
+                        console.log(`Game starting on room ${gameRoomId} [PLAYING: ${gameRoom?.gameState?.visible?.playingPlayers}]`);
                         io.to(gameRoomId).emit('game-started', ({ newGameState: gameRoom.gameState.visible }));
                     });
 
@@ -229,7 +236,7 @@ const setup = (db) => io.on('connection', socket => {
     socket.on('decline-offer', ({ gameRoomId, roomKey }) => {
         verifiedGetGameRoom(gameRoomId).then(gameRoom => {
             if (gameRoom && [gameRoom.roomKey, 'OVERRIDE'].includes(roomKey)) {
-                if (gameRoom && gameRoom.gameState) {
+                if (gameRoom?.gameState) {
                     gs = gameRoom.gameState;
                     console.log(gs)
                     gsv = gs.visible;
@@ -252,6 +259,7 @@ const setup = (db) => io.on('connection', socket => {
     var answered = false;
     socket.on('heartbeat-ok', () => { answered = true; })
     const hearbeat = (missed, details) => {
+        console.log(`HB [${details?.playerId}] [${missed}]`)
         if (missed >= 2) {
             console.log(`Over 3 missed heartbeats for ${details.playerId} on ${details.gameRoomId}. Kicking...`);
             details.roomKey = 'OVERRIDE';
@@ -262,11 +270,12 @@ const setup = (db) => io.on('connection', socket => {
             setTimeout(() => {
                 if (answered) {
                     missed = 0;
+                    answered = false;
                 } else {
                     missed++;
                 }
                 hearbeat(missed, details);
-            }, 10000)
+            }, 2500)
         }
     };
 

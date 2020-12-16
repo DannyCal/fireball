@@ -164,9 +164,9 @@ const SyncedSession = ({ gameRoomId, socket }) => {
                     {players.length && players.map(p => <li key={p}>
                         {p}
                         {playingPlayers && playingPlayers.includes(p) && { en: ' [Playing]', il: ' [משחק]' }[language]}
-                        {p === sender && <b>{' [Sender]'}</b>}
-                        {p === receiver && <b>{' [Receiver]'}</b>}
-                        {p === adminId && <b>{' [Admin]'}</b>}
+                        {p === sender && <b>{{ en: ' [Sender]', il: ' [שולח]' }[language]}</b>}
+                        {p === receiver && <b>{{ en: ' [Receiver]', il: ' [מקבל]' }[language]}</b>}
+                        {p === adminId && <b>{{ en: ' [Admin]', il: ' [מנהל]' }[language]}</b>}
                     </li>)}
                 </ul>
             </div>

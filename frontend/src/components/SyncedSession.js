@@ -5,6 +5,13 @@ import logo from '../assets/png/fireballLogo.png';
 
 const isDebug = false
 
+/* 
+SyncedSession is the where the actual game happens, and is where players with the same gameRoomId will share a synced gaming session online.
+Documentation will be spread inside the component instead of in this small JSDoc, and will explain briefly the changes of the game's state, following orders from the backend server.
+
+gameRoomId : is the id of the gameroom, also visible in the browser's address.
+socket : the socket created on the frontend server, to connect to the many game rooms being operated.
+*/
 const SyncedSession = ({ gameRoomId, socket }) => {
 
     const [language, setLanguage] = useState('en')

@@ -4,6 +4,13 @@ import logo from '../assets/png/fireballLogo.png';
 import '../css/general.css';
 
 
+/*
+Homepage is the opening page of the application. 
+It allows players to join an existing room even with lack of direct invitation by address, by entering the gameRoomId, shown to eveyone inside the room.
+In addition, players can create an entirely new room, with the gameRoomId being randomly generated out of a pool of available name combinations.
+
+socket : the socket created on the frontend server, to connect to the many game rooms being operated.
+*/
 const Homepage = ({ socket }) => {
 
     const [roomName, setRoomName] = useState('');

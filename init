@@ -1,0 +1,2 @@
+node ./frontend/server.js
+node ./backend/src/index.js

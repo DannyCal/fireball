@@ -5,7 +5,7 @@ const fs = require('fs');
 const pouchdb = require('pouchdb');
 const { newGameState, checkVictory } = require('./gameFunctions');
 const { generateRandomName } = require('./appFunctions');
-const { PromiseTimer } = require('./PromiseTimer');
+// const { PromiseTimer } = require('./PromiseTimer');
 
 fs.rmdirSync('fireballdb', { recursive: true });
 
@@ -17,7 +17,7 @@ const idleTimeout = 600000; // 10 Minutes
 // else
 //     setup(db);
 
-queues = {}
+// queues = {}
 
 const setup = (db) => io.on('connection', socket => {
 
@@ -90,7 +90,7 @@ const setup = (db) => io.on('connection', socket => {
 
     socket.on('join-room', ({ gameRoomId, playerId }) => {
         socket.join(gameRoomId);
-        hearbeat(0, { gameRoomId, playerId });
+        heartbeat(0, { gameRoomId, playerId });
         verifiedGetGameRoom(gameRoomId).then(gameRoom => {
             if (gameRoom) {
                 gameRoom.players.push(playerId);
@@ -256,7 +256,7 @@ const setup = (db) => io.on('connection', socket => {
 
     var answered = false;
     socket.on('heartbeat-ok', () => { answered = true; })
-    const hearbeat = (missed, details) => {
+    const heartbeat = (missed, details) => {
         if (missed >= 2) {
             console.log(`Over 3 missed heartbeats for ${details.playerId} on ${details.gameRoomId}. Kicking...`);
             details.roomKey = 'OVERRIDE';
@@ -271,7 +271,7 @@ const setup = (db) => io.on('connection', socket => {
                 } else {
                     missed++;
                 }
-                hearbeat(missed, details);
+                heartbeat(missed, details);
             }, 2500)
         }
     };
